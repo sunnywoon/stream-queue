@@ -32,12 +32,6 @@ class RedisQueue
      * */
     public function __construct(array $config)
     {
-        if (!isset($config['stream'])) {
-            throw new Exception("you must config the stream");
-        }
-
-        $this->_mStream = $config['stream'];
-
         if (!isset($config['server'])) {
             throw new Exception("you must config the server");
         }
@@ -65,6 +59,12 @@ class RedisQueue
         $this->_mConsumer = $config['consumer'] ?? $config['stream'];
 
         $this->creatGroup();
+    }
+
+
+    public function stream($stream)
+    {
+        $this->stream = $stream;
     }
 
     /*
