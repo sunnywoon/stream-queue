@@ -1,5 +1,7 @@
 <?php
 
+namespace StreamQueue;
+
 /*
  * 需要redis-server5.0以上
  * php-redis扩展版本要适配redis-5.0
