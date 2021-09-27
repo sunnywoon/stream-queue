@@ -58,21 +58,25 @@ class RedisQueue
     public function stream($stream)
     {
         $this->stream = $stream;
+        return $this;
     }
 
     public function maxLength($maxLength)
     {
         $this->_mMaxLength = $maxLength;
+        return $this;
     }
 
     public function group($group)
     {
         $this->_mGroup = $group;
+        return $this;
     }
 
     public function consumer($consumer)
     {
         $this->_mConsumer = $consumer;
+        return $this;
     }
 
     /*
