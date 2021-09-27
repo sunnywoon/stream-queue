@@ -1,0 +1,11 @@
+{
+  "name": "woon/stream-queue",
+  "require": {
+
+  },
+  "autoload": {
+    "psr-4": {
+      "StreamQueue\\": "src/"
+    }
+  }
+}
