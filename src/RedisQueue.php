@@ -51,13 +51,6 @@ class RedisQueue
             throw new Exception("can not get redis server conf");
         }
 
-        if (isset($config['maxLength'])) {
-            $this->_mMaxLength = $config['maxLength'];
-        }
-
-        $this->_mGroup    = $config['group'] ?? $config['stream'];
-        $this->_mConsumer = $config['consumer'] ?? $config['stream'];
-
         $this->creatGroup();
     }
 
@@ -65,6 +58,21 @@ class RedisQueue
     public function stream($stream)
     {
         $this->stream = $stream;
+    }
+
+    public function maxLength($maxLength)
+    {
+        $this->_mMaxLength = $maxLength;
+    }
+
+    public function group($group)
+    {
+        $this->_mGroup = $group;
+    }
+
+    public function consumer($consumer)
+    {
+        $this->_mConsumer = $consumer;
     }
 
     /*
