@@ -42,7 +42,7 @@ class RedisQueue
         $auth = $tmp[2] ?? null;
 
         if ($host && $port) {
-            $this->_mRedis = new Redis();
+            $this->_mRedis = new \Redis();
             $this->_mRedis->connect($host, $port, 1);
             if ($auth) {
                 $this->_mRedis->auth($auth);
