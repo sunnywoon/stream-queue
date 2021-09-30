@@ -57,7 +57,7 @@ class RedisQueue
 
     public function stream($stream)
     {
-        $this->stream = $stream;
+        $this->_mStream = $stream;
         return $this;
     }
 
