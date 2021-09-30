@@ -1,7 +1,8 @@
 {
   "name": "woon/stream-queue",
   "require": {
-    "php": ">=7.4"
+    "php": ">=7.4",
+    "ext-redis": "^5.2"
   },
   "autoload": {
     "psr-4": {

@@ -30,53 +30,46 @@ class RedisQueue
      * group:分组名, 默认与stream相同. stream+group相当于beanstalk的tube
      * consumer:消费者名, 默认与stream相同.
      * */
-    public function __construct(array $config)
+    public function __construct(array $config, \Redis $redis = null)
     {
-        if (!isset($config['server'])) {
-            throw new Exception("you must config the server");
+        if (!isset($config['stream'])) {
+            throw new \Exception("you must config the stream");
         }
 
-        $tmp  = explode(':', $config['server']);
-        $host = $tmp[0];
-        $port = $tmp[1];
-        $auth = $tmp[2] ?? null;
+        $this->_mStream = $config['stream'];
 
-        if ($host && $port) {
-            $this->_mRedis = new \Redis();
-            $this->_mRedis->connect($host, $port, 1);
-            if ($auth) {
-                $this->_mRedis->auth($auth);
+        if (is_null($redis)) {
+
+            if (!isset($config['server'])) {
+                throw new \Exception("you must config the server");
+            }
+
+            $tmp  = explode(':', $config['server']);
+            $host = $tmp[0];
+            $port = $tmp[1];
+            $auth = $tmp[2] ?? null;
+
+            if ($host && $port) {
+                $this->_mRedis = new \Redis();
+                $this->_mRedis->connect($host, $port, 1);
+                if ($auth) {
+                    $this->_mRedis->auth($auth);
+                }
+            } else {
+                throw new \Exception("can not get redis server conf");
             }
         } else {
-            throw new Exception("can not get redis server conf");
+            $this->_mRedis = $redis;
         }
 
+        if (isset($config['maxLength'])) {
+            $this->_mMaxLength = $config['maxLength'];
+        }
+
+        $this->_mGroup    = $config['group'] ?? $config['stream'];
+        $this->_mConsumer = $config['consumer'] ?? $config['stream'];
+
         $this->creatGroup();
-    }
-
-
-    public function stream($stream)
-    {
-        $this->_mStream = $stream;
-        return $this;
-    }
-
-    public function maxLength($maxLength)
-    {
-        $this->_mMaxLength = $maxLength;
-        return $this;
-    }
-
-    public function group($group)
-    {
-        $this->_mGroup = $group;
-        return $this;
-    }
-
-    public function consumer($consumer)
-    {
-        $this->_mConsumer = $consumer;
-        return $this;
     }
 
     /*
