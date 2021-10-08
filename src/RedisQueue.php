@@ -2,6 +2,8 @@
 
 namespace StreamQueue;
 
+use Redis;
+
 /*
  * 需要redis-server5.0以上
  * php-redis扩展版本要适配redis-5.0
@@ -30,7 +32,7 @@ class RedisQueue
      * group:分组名, 默认与stream相同. stream+group相当于beanstalk的tube
      * consumer:消费者名, 默认与stream相同.
      * */
-    public function __construct(array $config, \Redis $redis = null)
+    public function __construct(array $config, Redis $redis = null)
     {
         if (!isset($config['stream'])) {
             throw new \Exception("you must config the stream");
@@ -50,7 +52,7 @@ class RedisQueue
             $auth = $tmp[2] ?? null;
 
             if ($host && $port) {
-                $this->_mRedis = new \Redis();
+                $this->_mRedis = new Redis();
                 $this->_mRedis->connect($host, $port, 1);
                 if ($auth) {
                     $this->_mRedis->auth($auth);
