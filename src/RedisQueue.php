@@ -85,10 +85,11 @@ class RedisQueue
     /*
      * 向流中添加任务
      * $data: array
+     * $id: string
      * */
-    public function addTask(array $data)
+    public function addTask(array $data, string $id = "*")
     {
-        return $this->_mRedis->xAdd($this->_mStream, "*", $data, $this->_mMaxLength);
+        return $this->_mRedis->xAdd($this->_mStream, $id, $data, $this->_mMaxLength);
     }
 
     /*
