@@ -4,9 +4,20 @@
     "php": ">=7.4",
     "ext-redis": "^5.2"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
   "autoload": {
     "psr-4": {
       "StreamQueue\\": "src/"
     }
+  },
+  "config": {
+    "platform": {
+      "php": "7.4.0"
+    }
+  },
+  "scripts": {
+    "test": "phpunit"
   }
 }
