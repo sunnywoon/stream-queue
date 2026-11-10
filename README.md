@@ -98,6 +98,7 @@ if ($tasks) {
 - 使用 Redis 6.2+ 的 `XAUTOCLAIM`，从 `0-0` 扫描整个消费组的 PEL，直到服务端游标回到 `0-0`。
 - 扫描范围是整个消费组，不只是当前 consumer；同一组内的跨 consumer 超时任务也会被覆盖。
 - 即使某一页没有成功认领，也会继续扫描，不会饿死后页的超时任务。
+- 每页通过 Lua 原子执行消费组校验与 `XAUTOCLAIM`。扫描期间出现第二组时，后续认领会抛出 `RuntimeException`；此前完成的认领不会回滚，任务仍保留原 ID、正文和 PEL。
 - 空 PEL 返回 `0`；缺少 `$newConsumer` 时保留返回 `false` 的行为。
 - `$idleTime >= 0`，`$perPage > 0`，非法参数抛出 `InvalidArgumentException`。
 - `$idleTime = 0` 表示可以立即重新认领，因此不提供并发独占保证。

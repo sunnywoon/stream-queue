@@ -508,6 +508,39 @@ final class RedisQueueTest extends TestCase
         $this->assertArrayHasKey($id, $this->redis->xRange($this->stream, '-', '+'));
     }
 
+    public function testSecondGroupCreatedDuringScanStopsFurtherClaims()
+    {
+        $queue = new class(array(
+            'stream' => $this->stream,
+            'group' => $this->group,
+            'consumer' => 'c1',
+        ), $this->redis) extends RedisQueue {
+            private $pages = 0;
+
+            protected function xAutoClaim($consumer, $idleTime, $start, $count)
+            {
+                if (++$this->pages === 2) {
+                    // 精确模拟首批完成后、下一批命令前出现第二组。
+                    $this->_mRedis->xGroup('CREATE', $this->_mStream, 'second-group', '0');
+                }
+                return parent::xAutoClaim($consumer, $idleTime, $start, $count);
+            }
+        };
+        $ids = array();
+        for ($i = 0; $i < 3; $i++) {
+            $ids[] = $queue->addTask(array('n' => $i));
+        }
+        $queue->getTask(null, 3);
+
+        $this->assertThrows(\RuntimeException::class, function () use ($queue) {
+            $queue->pendingClaim(0, 'c2', 1);
+        });
+        $this->assertSame(1, $this->pendingFor('c2'));
+        $this->assertSame(2, $this->pendingFor('c1'));
+        $this->assertSame($ids, array_keys($this->redis->xRange($this->stream, '-', '+')));
+        $this->assertSame(3, $this->pendingCount());
+    }
+
     public function testConstructorRejectsDifferentOrAdditionalGroup()
     {
         $this->makeQueue('c1');

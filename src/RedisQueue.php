@@ -94,6 +94,21 @@ end
 return {acked, deleted}
 LUA;
 
+    /* 每页认领都原子校验消费组，拒绝扫描期间外部新增的第二组。 */
+    protected const LUA_AUTO_CLAIM = <<<'LUA'
+local groups = redis.call('XINFO', 'GROUPS', KEYS[1])
+if #groups == 0 then
+    return redis.error_reply('STREAMQUEUE_NOGROUP consumer group does not exist')
+end
+if #groups > 1 then
+    return redis.error_reply('STREAMQUEUE_MULTI_GROUP stream has more than one consumer group')
+end
+if groups[1][2] ~= ARGV[1] then
+    return redis.error_reply('STREAMQUEUE_GROUP_MISMATCH consumer group does not match configuration')
+end
+return redis.call('XAUTOCLAIM', KEYS[1], ARGV[1], ARGV[2], ARGV[3], ARGV[4], 'COUNT', ARGV[5])
+LUA;
+
     /*
      * 创建队列, stream+group确认唯一队列
      * $config必须包括:
@@ -576,16 +591,14 @@ LUA;
     {
         try {
             $this->_mRedis->clearLastError();
-            $reply = $this->_mRedis->rawCommand(
-                'XAUTOCLAIM',
+            $reply = $this->_mRedis->eval(self::LUA_AUTO_CLAIM, array(
                 $this->_mStream,
                 $this->_mGroup,
                 $consumer,
                 (string) $idleTime,
                 $start,
-                'COUNT',
                 (string) $count
-            );
+            ), 1);
         } catch (\RedisException $e) {
             if (stripos($e->getMessage(), 'unknown command') !== false) {
                 throw new \RuntimeException(
@@ -594,7 +607,7 @@ LUA;
                     $e
                 );
             }
-            throw $e;
+            $this->throwGroupOrCapacityException($e);
         }
 
         if ($reply === false) {
@@ -604,7 +617,7 @@ LUA;
                     'XAUTOCLAIM requires Redis 6.2 or newer; please upgrade the Redis server'
                 );
             }
-            throw new \RedisException($error);
+            $this->throwGroupOrCapacityException(new \RedisException($error));
         }
 
         if (!is_array($reply) || count($reply) < 2) {
